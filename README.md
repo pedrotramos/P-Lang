@@ -6,7 +6,7 @@
 BLOCK = { COMMAND } ;
 COMMAND = ( λ | ASSIGNMENT | PRINT), ";" ;
 ASSIGNMENT = IDENTIFIER, "=", EXPRESSION ;
-PRINT = "println", "(", EXPRESSION, ")" ;
+PRINT = "imprima", "(", EXPRESSION, ")" ;
 EXPRESSION = TERM, { ("+" | "-"), TERM } ;
 TERM = FACTOR, { ("*" | "/"), FACTOR } ;
 FACTOR = (("+" | "-"), FACTOR) | NUMBER | "(", EXPRESSION, ")" | IDENTIFIER ;
