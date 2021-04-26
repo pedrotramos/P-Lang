@@ -1,4 +1,4 @@
-# C-pt (Linguagem C em Português Brasileiro)
+# Swift em Português Brasileiro
 
 ## EBNF
 
