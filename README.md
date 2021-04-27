@@ -27,7 +27,7 @@ UNARY-OPERATOR = ( "+" | "-" ) ;
 ARITHIMETIC-OPERATOR = ( UNARY-OPERATOR | "*" | "/" | "%" ) ;
 LOGICAL-OPERATOR = ( ">" | "<" | ">=" | "<=" | "==" | "!=" | "&&" | "||" | "!" ) ;
 PRINT = "imprima", "(", EXPRESSION, ")", ";" ;
-RETURN = "retorne", { EXPRESSION }, ";" ;
+RETURN = "retorne", [ EXPRESSION ], ";" ;
 EXPRESSION = [ UNARY-OPERATOR ], ( NUMBER | IDENTIFIER | FUNCTION-CALL ), { OPERATOR, ( NUMBER | IDENTIFIER | FUNCTION-CALL ) }, ";" ;
 NUMBER = DIGIT, { DIGIT } ;
 LETTER = ( a | ... | z | A | ... | Z ) ;
