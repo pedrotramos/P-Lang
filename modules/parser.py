@@ -6,6 +6,7 @@ from modules.ast import (
     EqComp,
     GtComp,
     GteComp,
+    Identifier,
     IfElseOp,
     LtComp,
     LteComp,
@@ -17,10 +18,16 @@ from modules.ast import (
     OrOp,
     Positive,
     Print,
+    Rem,
+    String,
     Sub,
     Sum,
+    Variable,
     WhileOp,
 )
+
+from modules.symbol_table import SymbolTable
+
 from rply import ParserGenerator
 
 
@@ -29,6 +36,7 @@ class Parser:
         self.pgen = ParserGenerator(
             # A list of all token names accepted by the parser.
             [
+                "STRING",
                 "BOOL",
                 "NUMBER",
                 "PRINT",
@@ -39,6 +47,7 @@ class Parser:
                 "SUB",
                 "MULTI",
                 "DIV",
+                "REM",
                 "AND",
                 "OR",
                 "WHILE",
@@ -62,29 +71,60 @@ class Parser:
                 ("left", ["EQ_COMP", "NEQ_COMP"]),
                 ("left", ["GTE_COMP", "GT_COMP", "LTE_COMP", "LT_COMP"]),
                 ("left", ["SUM", "SUB"]),
-                ("left", ["MULTI", "DIV"]),
+                ("left", ["MULTI", "DIV", "REM"]),
             ],
         )
+        self.symbols = SymbolTable()
 
     def parse(self):
         @self.pgen.production("block : OPEN_BLOCK CLOSE_BLOCK")
         @self.pgen.production("block : OPEN_BLOCK expression_seq CLOSE_BLOCK")
         def block(p):
-            if len(p) == 3:
-                return Block(p[1])
+            def parse_expressions(exps):
+                expressions = [exps[0]]
+                if len(exps) > 2:
+                    new_exps = parse_expressions(exps[2])
+                    for exp in new_exps:
+                        expressions.append(exp)
+                    return expressions
+                else:
+                    if type(exps[1]) == type(list()):
+                        new_exps = parse_expressions(exps[1])
+                        for exp in new_exps:
+                            expressions.append(exp)
+                        return expressions
+                    return [exps[0]]
+
+            if len(p) >= 3:
+                expressions = parse_expressions(p[1])
+                return Block(expressions)
             else:
                 return Block([])
 
         @self.pgen.production("expression_seq : expression EOL")
         @self.pgen.production("expression_seq : expression EOL expression_seq")
+        @self.pgen.production("expression_seq : println EOL")
+        @self.pgen.production("expression_seq : println EOL expression_seq")
+        @self.pgen.production("expression_seq : while")
+        @self.pgen.production("expression_seq : while expression_seq")
+        @self.pgen.production("expression_seq : if_else")
+        @self.pgen.production("expression_seq : if_else expression_seq")
         def expression_seq(p):
             if len(p) == 2:
-                return
+                return p
+            else:
+                return p
 
+        @self.pgen.production("println : PRINT OPEN_PAREN expression CLOSE_PAREN")
+        def println(p):
+            return Print(p[2])
+
+        @self.pgen.production("expression : VAR IDENTIFIER expression")
         @self.pgen.production("expression : expression SUM expression")
         @self.pgen.production("expression : expression SUB expression")
         @self.pgen.production("expression : expression MULTI expression")
         @self.pgen.production("expression : expression DIV expression")
+        @self.pgen.production("expression : expression REM expression")
         @self.pgen.production("expression : expression EQ_COMP expression")
         @self.pgen.production("expression : expression NEQ_COMP expression")
         @self.pgen.production("expression : expression GTE_COMP expression")
@@ -94,6 +134,8 @@ class Parser:
         @self.pgen.production("expression : expression AND expression")
         @self.pgen.production("expression : expression OR expression")
         def bin_expression(p):
+            if p[1].gettokentype() == "IDENTIFIER":
+                return Identifier(p[0].value, p[2], self.symbols)
             if p[1].gettokentype() == "SUM":
                 return Sum(p[0], p[2])
             elif p[1].gettokentype() == "SUB":
@@ -102,6 +144,8 @@ class Parser:
                 return Multi(p[0], p[2])
             elif p[1].gettokentype() == "DIV":
                 return Div(p[0], p[2])
+            elif p[1].gettokentype() == "REM":
+                return Rem(p[0], p[2])
             elif p[1].gettokentype() == "EQ_COMP":
                 return EqComp(p[0], p[2])
             elif p[1].gettokentype() == "NEQ_COMP":
@@ -130,10 +174,14 @@ class Parser:
             elif p[0].gettokentype() == "SUB":
                 return Negative(p[1])
 
-        @self.pgen.production("if_else : IF OPEN_PAREN expression CLOSE_PAREN block")
+        @self.pgen.production("expression : OPEN_PAREN expression CLOSE_PAREN")
         @self.pgen.production(
-            "if_else : IF OPEN_PAREN expression CLOSE_PAREN block ELSE if_else"
+            "expression : OPEN_PAREN expression CLOSE_PAREN expression"
         )
+        def paren_exp(p):
+            return p[1]
+
+        @self.pgen.production("if_else : IF OPEN_PAREN expression CLOSE_PAREN block")
         @self.pgen.production(
             "if_else : IF OPEN_PAREN expression CLOSE_PAREN block ELSE block"
         )
@@ -147,25 +195,25 @@ class Parser:
         def while_loop(p):
             return WhileOp(p[2], p[4])
 
-        @self.pgen.production("println : PRINT OPEN_PAREN expression CLOSE_PAREN EOL")
-        def println(p):
-            return Print(p[2])
+        @self.pgen.production("expression : VAR")
+        def number(p):
+            return Variable(p[0].value, self.symbols)
 
-        @self.pg.production("expression : NUMBER")
+        @self.pgen.production("expression : NUMBER")
         def number(p):
             return Number(p[0].value)
 
-        @self.pg.production("expression : BOOL")
+        @self.pgen.production("expression : BOOL")
         def boolean(p):
             return Bool(p[0].value)
 
-        # @self.pg.production("expression : IDENTIFIER")
-        # def identifier(p):
-        #     return (p[0].value)
+        @self.pgen.production("expression : STRING")
+        def string(p):
+            return String(p[0].value)
 
-        @self.pg.error
+        @self.pgen.error
         def error_handle(token):
             raise ValueError(token)
 
     def get_parser(self):
-        return self.pg.build()
+        return self.pgen.build()

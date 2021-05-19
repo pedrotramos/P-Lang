@@ -13,8 +13,8 @@ ELSE-STATEMENT = ( "senao", "{" BLOCK "}" | "senao", IF-STATEMENT ) ;
 CONDITION-LIST = ( CONDITION | CONDITION, CONDITION-LIST ) ;
 CONDITION = ( EXPRESSION, LOGICAL-OPERATOR, EXPRESSION | LOGICAL-OPERATOR, EXPRESSION ) ;
 OPERATOR = ( ARITHMETIC-OPERATOR | LOGICAL-OPERATOR ) ;
-ARITHIMETIC-OPERATOR = ( "+" | "-" | "*" | "/" )
-LOGICAL-OPERATOR = ( ">" | "<" | ">=" | "<=" | "==" | "!=" | "&&" | "||" | "!" )
+ARITHIMETIC-OPERATOR = ( "+" | "-" | "*" | "/" | "%" ) ;
+LOGICAL-OPERATOR = ( ">" | "<" | ">=" | "<=" | "==" | "!=" | "e" | "ou" | "nao" ) ;
 PRINT = "imprima", "(", EXPRESSION, ")" ;
 EXPRESSION = [( "!" | "+" | "-" )], ( IDENTIFIER | NUMBER | BOOL ), {OPERATOR, ( NUMBER | IDENTIFIER | BOOL )}, ";" ;
 NUMBER = DIGIT, { DIGIT } ;

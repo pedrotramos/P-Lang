@@ -3,7 +3,8 @@ class Block:
         self.expressions = expressions
 
     def eval(self):
-        self.expressions.eval()
+        for expression in self.expressions:
+            expression.eval()
 
 
 class ExpressionSequence:
@@ -24,7 +25,18 @@ class Bool:
         self.value = value
 
     def eval(self):
-        return bool(self.value)
+        if self.value == "verdadeiro":
+            return True
+        else:
+            return False
+
+
+class String:
+    def __init__(self, value):
+        self.value = value
+
+    def eval(self):
+        return str(self.value)
 
 
 class UnaryOperation:
@@ -53,6 +65,19 @@ class BinaryOperation:
         self.right = right
 
 
+class Identifier(BinaryOperation):
+    def __init__(self, left, right, s):
+        self.symbols = s
+        super().__init__(left, right)
+
+    def eval(self):
+        self.symbols.setSymbol(
+            self.left,
+            self.right.eval(),
+        )
+        return
+
+
 class Sum(BinaryOperation):
     def eval(self):
         return self.left.eval() + self.right.eval()
@@ -71,6 +96,11 @@ class Multi(BinaryOperation):
 class Div(BinaryOperation):
     def eval(self):
         return int(self.left.eval() / self.right.eval())
+
+
+class Rem(BinaryOperation):
+    def eval(self):
+        return int(self.left.eval() % self.right.eval())
 
 
 class EqComp(BinaryOperation):
@@ -133,8 +163,8 @@ class WhileOp:
         self.commands = commands
 
     def eval(self):
-        while self.children[0].eval():
-            self.children[1].eval()
+        while self.condition.eval():
+            self.commands.eval()
 
 
 class Print:
@@ -143,3 +173,12 @@ class Print:
 
     def eval(self):
         print(self.value.eval())
+
+
+class Variable:
+    def __init__(self, value, s):
+        self.symbols = s
+        self.value = value
+
+    def eval(self):
+        return self.symbols.getSymbol(self.value)

@@ -9,14 +9,14 @@ class Lexer:
         # Print
         self.lexer.add("PRINT", r"imprima")
         # While
-        self.lexer.add("WHILE", r"while")
+        self.lexer.add("WHILE", r"enquanto")
         # If-Else
         self.lexer.add("ELSE", r"senao")
         self.lexer.add("IF", r"se")
         # Bool
         self.lexer.add("BOOL", r"(verdadeiro|falso)")
-        # Variables
-        self.lexer.add("VAR", r"[a-zA-Z_$][a-zA-Z_$0-9]*")
+        # String
+        self.lexer.add("STRING", r"\".*\"")
         # Block Delimiter
         self.lexer.add("OPEN_BLOCK", r"\{")
         self.lexer.add("CLOSE_BLOCK", r"\}")
@@ -30,6 +30,7 @@ class Lexer:
         self.lexer.add("SUB", r"\-")
         self.lexer.add("MULTI", r"\*")
         self.lexer.add("DIV", r"\/")
+        self.lexer.add("REM", r"\%")
         # Logical Opertors
         self.lexer.add("EQ_COMP", r"\=\=")
         self.lexer.add("NEQ_COMP", r"\!\=")
@@ -37,9 +38,11 @@ class Lexer:
         self.lexer.add("LTE_COMP", r"\<\=")
         self.lexer.add("GT_COMP", r"\>")
         self.lexer.add("LT_COMP", r"\<")
-        self.lexer.add("AND", r"\&\&")
-        self.lexer.add("OR", r"\|\|")
-        self.lexer.add("NOT", r"\!")
+        self.lexer.add("AND", r"e")
+        self.lexer.add("OR", r"ou")
+        self.lexer.add("NOT", r"nao")
+        # Variables
+        self.lexer.add("VAR", r"[a-zA-Z_$][a-zA-Z_$0-9]*")
         # Identifier
         self.lexer.add("IDENTIFIER", r"\=")
         # Number
