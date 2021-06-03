@@ -1,14 +1,13 @@
-{
-    i = 1 + (2 + 2) * 5 % 2;
-    enquanto (i < 10 ou i == 10) {
-        imprima(i);
-        se (i % 2 == 0) {
-            imprima("even");
-        }
-        senao {
-            imprima("odd");
-        }
-        i = i + 1;
+funcao fatorial(n) {
+    se (n == 1) {
+        output = 1;
     }
-    imprima("the program has ended");
+    senao {
+        output = n * fatorial(n - 1);
+    }
+    retorne output;
+}
+
+funcao principal() {
+    imprima(fatorial(5));
 }

@@ -6,15 +6,21 @@ class Lexer:
         self.lexer = LexerGenerator()
 
     def _add_tokens(self):
+        # Function Declaration
+        self.lexer.add("FUNCTION", r"funcao(?![\w])")
+        # Parameter Separator
+        self.lexer.add("SEP", r"\,")
+        # Return
+        self.lexer.add("RETURN", r"retorne(?![\w])")
         # Print
-        self.lexer.add("PRINT", r"imprima")
+        self.lexer.add("PRINT", r"imprima(?![\w])")
         # While
-        self.lexer.add("WHILE", r"enquanto")
+        self.lexer.add("WHILE", r"enquanto(?![\w])")
         # If-Else
-        self.lexer.add("ELSE", r"senao")
-        self.lexer.add("IF", r"se")
+        self.lexer.add("ELSE", r"senao(?![\w])")
+        self.lexer.add("IF", r"se(?![\w])")
         # Bool
-        self.lexer.add("BOOL", r"(verdadeiro|falso)")
+        self.lexer.add("BOOL", r"(verdadeiro(?![\w])|falso(?![\w]))")
         # String
         self.lexer.add("STRING", r"\".*\"")
         # Block Delimiter
@@ -38,13 +44,13 @@ class Lexer:
         self.lexer.add("LTE_COMP", r"\<\=")
         self.lexer.add("GT_COMP", r"\>")
         self.lexer.add("LT_COMP", r"\<")
-        self.lexer.add("AND", r"e")
-        self.lexer.add("OR", r"ou")
-        self.lexer.add("NOT", r"nao")
+        self.lexer.add("AND", r"e(?![\w])")
+        self.lexer.add("OR", r"ou(?![\w])")
+        self.lexer.add("NOT", r"nao(?![\w])")
         # Variables
-        self.lexer.add("VAR", r"[a-zA-Z_$][a-zA-Z_$0-9]*")
+        self.lexer.add("IDENTIFIER", r"[a-zA-Z_$][a-zA-Z_$0-9]*")
         # Identifier
-        self.lexer.add("IDENTIFIER", r"\=")
+        self.lexer.add("ATTRIBUTION", r"\=")
         # Number
         self.lexer.add("NUMBER", r"\d+")
         # Ignore spaces

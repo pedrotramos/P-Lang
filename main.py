@@ -2,6 +2,7 @@ import sys
 from argparse import ArgumentError
 from modules.lexer import Lexer
 from modules.parser import Parser
+from modules.ast import Root
 
 
 if __name__ == "__main__":
@@ -15,8 +16,8 @@ if __name__ == "__main__":
             pg = Parser()
             pg.parse()
             parser = pg.get_parser()
-            ast = parser.parse(tokens)
-            # print(ast, ast.expressions)
+            ast = Root(parser.parse(tokens))
+            # print(ast, ast.children[0].statements.expressions)
             ast.eval()
         except:
             raise ArgumentError("Não foi possível ler o arquivo de entrada")

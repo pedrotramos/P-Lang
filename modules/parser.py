@@ -4,6 +4,8 @@ from modules.ast import (
     Bool,
     Div,
     EqComp,
+    FuncCall,
+    FuncDec,
     GtComp,
     GteComp,
     Identifier,
@@ -19,6 +21,7 @@ from modules.ast import (
     Positive,
     Print,
     Rem,
+    Return,
     String,
     Sub,
     Sum,
@@ -61,9 +64,12 @@ class Parser:
                 "LT_COMP",
                 "GT_COMP",
                 "IDENTIFIER",
-                "VAR",
+                "ATTRIBUTION",
                 "OPEN_BLOCK",
                 "CLOSE_BLOCK",
+                "FUNCTION",
+                "SEP",
+                "RETURN",
             ],
             precedence=[
                 ("left", ["OR"]),
@@ -77,6 +83,61 @@ class Parser:
         self.symbols = SymbolTable()
 
     def parse(self):
+        @self.pgen.production("start : function_dec")
+        @self.pgen.production("start : function_dec start")
+        def begin(p):
+            def parse_declarations(decs):
+                if type(decs) == type(list()):
+                    if len(decs) > 1:
+                        declarations = [decs[0]]
+                        new_decs = parse_declarations(decs[1])
+                        if type(new_decs) == type(list()):
+                            for func in new_decs:
+                                declarations.append(func)
+                        else:
+                            declarations.append(new_decs)
+                        return declarations
+                    else:
+                        return [decs[0]]
+                else:
+                    return decs
+
+            return parse_declarations(p)
+
+        @self.pgen.production(
+            "function_dec : FUNCTION IDENTIFIER OPEN_PAREN CLOSE_PAREN block"
+        )
+        @self.pgen.production(
+            "function_dec : FUNCTION IDENTIFIER OPEN_PAREN identifier_seq CLOSE_PAREN block"
+        )
+        def function_dec(p):
+            def parse_identifiers(idents):
+                identifiers = {idents[0].value: None}
+                if len(idents) > 1:
+                    new_idents = parse_identifiers(idents[2])
+                    for p in new_idents.keys():
+                        identifiers[p] = None
+                    return identifiers
+                else:
+                    return {idents[0].value: None}
+
+            # Função sem parâmetros
+            if len(p) == 5:
+                self.symbols.setFunction(p[1].value, {})
+                self.symbols.setFunctionStmts(p[1].value, p[4])
+                return FuncDec(p[1].value, p[4], self.symbols)
+            # Função com parâmetros
+            else:
+                params = parse_identifiers(p[3])
+                self.symbols.setFunction(p[1].value, params)
+                self.symbols.setFunctionStmts(p[1].value, p[5])
+                return FuncDec(p[1].value, p[5], self.symbols)
+
+        @self.pgen.production("identifier_seq : IDENTIFIER")
+        @self.pgen.production("identifier_seq : IDENTIFIER SEP identifier_seq")
+        def ident_seq(p):
+            return p
+
         @self.pgen.production("block : OPEN_BLOCK CLOSE_BLOCK")
         @self.pgen.production("block : OPEN_BLOCK expression_seq CLOSE_BLOCK")
         def block(p):
@@ -103,6 +164,7 @@ class Parser:
 
         @self.pgen.production("expression_seq : expression EOL")
         @self.pgen.production("expression_seq : expression EOL expression_seq")
+        @self.pgen.production("expression_seq : return EOL")
         @self.pgen.production("expression_seq : println EOL")
         @self.pgen.production("expression_seq : println EOL expression_seq")
         @self.pgen.production("expression_seq : while")
@@ -110,16 +172,17 @@ class Parser:
         @self.pgen.production("expression_seq : if_else")
         @self.pgen.production("expression_seq : if_else expression_seq")
         def expression_seq(p):
-            if len(p) == 2:
-                return p
-            else:
-                return p
+            return p
 
         @self.pgen.production("println : PRINT OPEN_PAREN expression CLOSE_PAREN")
         def println(p):
             return Print(p[2])
 
-        @self.pgen.production("expression : VAR IDENTIFIER expression")
+        @self.pgen.production("return : RETURN expression")
+        def println(p):
+            return Return(p[1], self.symbols)
+
+        @self.pgen.production("expression : IDENTIFIER ATTRIBUTION expression")
         @self.pgen.production("expression : expression SUM expression")
         @self.pgen.production("expression : expression SUB expression")
         @self.pgen.production("expression : expression MULTI expression")
@@ -134,7 +197,7 @@ class Parser:
         @self.pgen.production("expression : expression AND expression")
         @self.pgen.production("expression : expression OR expression")
         def bin_expression(p):
-            if p[1].gettokentype() == "IDENTIFIER":
+            if p[1].gettokentype() == "ATTRIBUTION":
                 return Identifier(p[0].value, p[2], self.symbols)
             if p[1].gettokentype() == "SUM":
                 return Sum(p[0], p[2])
@@ -181,6 +244,32 @@ class Parser:
         def paren_exp(p):
             return p[1]
 
+        @self.pgen.production("param_seq : expression")
+        @self.pgen.production("param_seq : expression SEP param_seq")
+        def ident_seq(p):
+            return p
+
+        @self.pgen.production("expression : IDENTIFIER OPEN_PAREN CLOSE_PAREN")
+        @self.pgen.production(
+            "expression : IDENTIFIER OPEN_PAREN param_seq CLOSE_PAREN"
+        )
+        def func_call(p):
+            def parse_parameters(params):
+                parameters = [params[0]]
+                if len(params) > 1:
+                    new_params = parse_parameters(params[2])
+                    for p in new_params:
+                        parameters.append(p)
+                    return parameters
+                else:
+                    return [params[0]]
+
+            if len(p) == 3:
+                return FuncCall(p[0].value, [], self.symbols)
+            else:
+                params = parse_parameters(p[2])
+                return FuncCall(p[0].value, params, self.symbols)
+
         @self.pgen.production("if_else : IF OPEN_PAREN expression CLOSE_PAREN block")
         @self.pgen.production(
             "if_else : IF OPEN_PAREN expression CLOSE_PAREN block ELSE block"
@@ -195,7 +284,7 @@ class Parser:
         def while_loop(p):
             return WhileOp(p[2], p[4])
 
-        @self.pgen.production("expression : VAR")
+        @self.pgen.production("expression : IDENTIFIER")
         def number(p):
             return Variable(p[0].value, self.symbols)
 
