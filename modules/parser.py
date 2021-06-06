@@ -30,8 +30,13 @@ from modules.ast import (
 )
 
 from modules.symbol_table import SymbolTable
-
 from rply import ParserGenerator
+import sys
+
+if not sys.warnoptions:
+    import warnings
+
+    warnings.simplefilter("ignore")
 
 
 class Parser:

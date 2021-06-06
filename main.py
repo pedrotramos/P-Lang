@@ -17,7 +17,6 @@ if __name__ == "__main__":
             pg.parse()
             parser = pg.get_parser()
             ast = Root(parser.parse(tokens))
-            # print(ast, ast.children[0].statements.expressions)
             ast.eval()
         except:
             raise ArgumentError("Não foi possível ler o arquivo de entrada")
